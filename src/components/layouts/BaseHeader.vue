@@ -1,7 +1,29 @@
 <script lang="ts" setup>
+import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
 import { repository } from '~/../package.json'
 
-import { toggleDark } from '~/composables'
+import { toggleDark, useAuth } from '~/composables'
+
+const router = useRouter()
+const { isAuthenticated, logout, getDecodedToken } = useAuth()
+
+/**
+ * Handle user logout
+ */
+function handleLogout() {
+  logout()
+  ElMessage.success('Logged out successfully')
+  router.push('/login')
+}
+
+/**
+ * Get username from token
+ */
+function getUsername(): string {
+  const token = getDecodedToken()
+  return token?.sub || 'User'
+}
 </script>
 
 <template>
@@ -46,6 +68,30 @@ import { toggleDark } from '~/composables'
     <el-menu-item index="4">
       Orders
     </el-menu-item>
+
+    <!-- Authentication Menu Items -->
+    <el-menu-item v-if="!isAuthenticated" index="/login">
+      <el-button type="primary" size="small">
+        Login
+      </el-button>
+    </el-menu-item>
+
+    <el-sub-menu v-else index="auth">
+      <template #title>
+        <el-space :size="8">
+          <el-avatar :size="24" style="background-color: var(--ep-color-primary)">
+            {{ getUsername()[0].toUpperCase() }}
+          </el-avatar>
+          <span>{{ getUsername() }}</span>
+        </el-space>
+      </template>
+      <el-menu-item index="/dashboard">
+        Dashboard
+      </el-menu-item>
+      <el-menu-item @click="handleLogout">
+        Logout
+      </el-menu-item>
+    </el-sub-menu>
 
     <el-menu-item h="full" @click="toggleDark()">
       <button
