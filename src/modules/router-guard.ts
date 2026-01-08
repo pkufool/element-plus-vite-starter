@@ -26,10 +26,17 @@ export const install: UserModule = ({ router }) => {
 
       // Check if user has a valid token
       if (!token || !isTokenValid(token)) {
+        // Validate redirect parameter to prevent open redirect vulnerabilities
+        // Only allow internal paths (starting with /)
+        let redirectPath = to.fullPath
+        if (!redirectPath.startsWith('/')) {
+          redirectPath = '/'
+        }
+
         // Redirect to login page, save the intended destination
         next({
           path: '/login',
-          query: { redirect: to.fullPath },
+          query: { redirect: redirectPath },
         })
         return
       }

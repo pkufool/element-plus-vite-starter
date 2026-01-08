@@ -22,7 +22,8 @@ function handleLogout() {
  */
 function getUsername(): string {
   const token = getDecodedToken()
-  return token?.sub || 'User'
+  const username = token?.sub || 'User'
+  return username || 'U' // Fallback to 'U' if empty
 }
 </script>
 

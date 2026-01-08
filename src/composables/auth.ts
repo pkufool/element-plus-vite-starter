@@ -31,12 +31,16 @@ interface JWTPayload {
  */
 export function initAuth() {
   const storedToken = localStorage.getItem(TOKEN_KEY)
-  if (storedToken && isTokenValid(storedToken)) {
-    token.value = storedToken
-  }
-  else {
-    // Clear invalid token
-    localStorage.removeItem(TOKEN_KEY)
+  if (storedToken) {
+    // Set token first, then validate
+    // This avoids duplicate decoding since isTokenValid will decode it once
+    if (isTokenValid(storedToken)) {
+      token.value = storedToken
+    }
+    else {
+      // Clear invalid token
+      localStorage.removeItem(TOKEN_KEY)
+    }
   }
 }
 
