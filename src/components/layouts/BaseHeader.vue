@@ -1,7 +1,49 @@
 <script lang="ts" setup>
+import { ElMessage } from 'element-plus'
+import { onMounted, ref } from 'vue'
 import { repository } from '~/../package.json'
 
-import { toggleDark } from '~/composables'
+import { toggleDark, useAuth } from '~/composables'
+import { getLogtoRedirectUris } from '~/config/logto'
+
+const { isAuthenticated, signOut, getUserInfo } = useAuth()
+
+const username = ref<string>('User')
+
+/**
+ * Load user information
+ */
+onMounted(async () => {
+  if (isAuthenticated.value) {
+    const userInfo = await getUserInfo()
+    if (userInfo) {
+      // Try different fields for username
+      username.value = userInfo.username || userInfo.name || userInfo.sub || 'User'
+    }
+  }
+})
+
+/**
+ * Handle user logout with Logto
+ */
+async function handleLogout() {
+  try {
+    const { postLogoutRedirectUri } = getLogtoRedirectUris()
+    await signOut(postLogoutRedirectUri)
+    ElMessage.success('Signed out successfully')
+  }
+  catch (error) {
+    console.error('Sign out error:', error)
+    ElMessage.error('Failed to sign out. Please try again.')
+  }
+}
+
+/**
+ * Get username display value
+ */
+function getUsernameDisplay(): string {
+  return username.value || 'U' // Fallback to 'U' if empty
+}
 </script>
 
 <template>
@@ -46,6 +88,30 @@ import { toggleDark } from '~/composables'
     <el-menu-item index="4">
       Orders
     </el-menu-item>
+
+    <!-- Authentication Menu Items -->
+    <el-menu-item v-if="!isAuthenticated" index="/login">
+      <el-button type="primary" size="small">
+        Sign In
+      </el-button>
+    </el-menu-item>
+
+    <el-sub-menu v-else index="auth">
+      <template #title>
+        <el-space :size="8">
+          <el-avatar :size="24" style="background-color: var(--ep-color-primary)">
+            {{ getUsernameDisplay()[0].toUpperCase() }}
+          </el-avatar>
+          <span>{{ getUsernameDisplay() }}</span>
+        </el-space>
+      </template>
+      <el-menu-item index="/dashboard">
+        Dashboard
+      </el-menu-item>
+      <el-menu-item @click="handleLogout">
+        Sign Out
+      </el-menu-item>
+    </el-sub-menu>
 
     <el-menu-item h="full" @click="toggleDark()">
       <button

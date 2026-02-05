@@ -6,6 +6,10 @@ import {
   Setting,
 } from '@element-plus/icons-vue'
 
+import { useAuth } from '~/composables'
+
+const { isAuthenticated } = useAuth()
+
 // const isCollapse = ref(true)
 function handleOpen(key: string, keyPath: string[]) {
   // eslint-disable-next-line no-console
@@ -79,6 +83,24 @@ function handleClose(key: string, keyPath: string[]) {
       </el-icon>
       <template #title>
         Navigator Four
+        <el-tag v-if="isAuthenticated" type="warning" size="small" style="margin-left: 8px">
+          Protected
+        </el-tag>
+      </template>
+    </el-menu-item>
+
+    <el-divider />
+
+    <!-- Protected Pages Section -->
+    <el-menu-item v-if="isAuthenticated" index="/dashboard">
+      <el-icon>
+        <Document />
+      </el-icon>
+      <template #title>
+        Dashboard
+        <el-tag type="warning" size="small" style="margin-left: 8px">
+          Protected
+        </el-tag>
       </template>
     </el-menu-item>
   </el-menu>
