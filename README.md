@@ -16,7 +16,7 @@ If you want to a nuxt starter, see [element-plus-nuxt-starter](https://github.co
 
 - ⚡️ [Vite](https://vitejs.dev/) - Lightning-fast build tool
 - 🎨 [Element Plus](https://element-plus.org/) - Vue 3 UI library
-- 🔐 **JWT Authentication** - Token-based authentication with route guards
+- 🔐 **Logto Authentication** - Modern OAuth 2.0 and OIDC authentication service
 - 🛡️ **Permission Control** - Protect routes and restrict access to authenticated users
 - 📦 On-demand component loading
 - 🎯 TypeScript support
@@ -56,58 +56,97 @@ npm run dev
 
 See `src/styles/element/index.scss`.
 
-## JWT Authentication & Permission Control
+## Logto Authentication Integration
 
-This starter template includes a complete JWT-based authentication system with route guards for protecting pages.
+This starter template now includes **Logto** authentication - a modern, developer-friendly authentication service that handles OAuth 2.0, OpenID Connect (OIDC), and provides comprehensive user management.
 
-### Overview
+### Features
 
-The authentication system provides:
+- 🔐 **Secure Authentication** - OAuth 2.0 and OIDC flows handled by Logto
+- 🚀 **Easy Setup** - Just configure environment variables and you're ready
+- 👤 **User Management** - Built-in user profiles, social logins, and more
+- 🔑 **JWT Tokens** - Industry-standard token-based authentication
+- 🛡️ **Protected Routes** - Router guards automatically check authentication
+- 📱 **Multi-Platform** - Works for web, mobile, and more
 
-- JWT token validation and management
-- Protected routes with automatic redirection
-- Login/logout functionality
-- User session persistence via localStorage
-- Router guards for access control
+### Quick Start with Logto
 
-### Quick Start
+#### 1. Create a Logto Account
 
-1. **Login to the application:**
-   - Navigate to `/login`
-   - Enter any username and password (demo mode)
-   - A mock JWT token will be generated and stored
+1. Visit [Logto.io](https://logto.io/) and sign up for free
+2. Create a new application in the Logto Console
+3. Choose "Traditional Web App" as the application type
+4. Get your **Endpoint** and **App ID** from the application settings
 
-2. **Access protected pages:**
-   - Visit `/dashboard` to see a protected page
-   - Try visiting `/nav/4` which is also protected
-   - Without authentication, you'll be redirected to login
+#### 2. Configure Environment Variables
 
-3. **Logout:**
-   - Click on your username in the header
-   - Select "Logout" from the dropdown menu
+Copy the example environment file and fill in your Logto credentials:
 
-### Architecture
+```bash
+cp .env.example .env
+```
 
-#### Authentication Files
+Edit `.env` with your Logto credentials:
 
-- **`src/composables/auth.ts`** - Core authentication logic
-  - JWT token validation
-  - Token storage/retrieval from localStorage
-  - `useAuth()` composable for components
+```env
+# Your Logto endpoint (from Logto Console)
+VITE_LOGTO_ENDPOINT=https://your-app.logto.app
 
-- **`src/modules/router-guard.ts`** - Route protection middleware
-  - Global navigation guard
-  - Checks `meta.requiresAuth` on routes
-  - Redirects unauthenticated users to login
+# Your Logto application ID (from Logto Console)
+VITE_LOGTO_APP_ID=your-app-id
 
-- **`src/pages/login.vue`** - Login page component
-  - Login form UI
-  - Mock JWT token generation (for demo)
-  - Credential submission handler
+# Redirect URI after successful authentication
+VITE_LOGTO_REDIRECT_URI=http://localhost:5173/callback
+
+# URI to redirect after logout
+VITE_LOGTO_POST_LOGOUT_REDIRECT_URI=http://localhost:5173
+```
+
+#### 3. Configure Redirect URIs in Logto
+
+In your Logto application settings, add these redirect URIs:
+
+**Sign-in redirect URIs:**
+- Development: `http://localhost:5173/callback`
+- Production: `https://yourdomain.com/callback`
+
+**Post sign-out redirect URIs:**
+- Development: `http://localhost:5173`
+- Production: `https://yourdomain.com`
+
+#### 4. Run the Application
+
+```bash
+npm install
+npm run dev
+```
+
+Visit `http://localhost:5173` and click "Sign In" to test Logto authentication!
+
+### How It Works
+
+#### Authentication Flow
+
+1. **User clicks "Sign In"** → Redirects to Logto's authentication page
+2. **User authenticates** → Logto validates credentials (or social login)
+3. **Redirect to callback** → Logto redirects back to `/callback` with authorization code
+4. **Handle callback** → App exchanges code for tokens and creates session
+5. **Access protected routes** → User can now access protected pages
+
+#### Architecture
+
+**Key Files:**
+
+- **`src/config/logto.ts`** - Logto configuration and environment variables
+- **`src/composables/auth.ts`** - Authentication composable with Logto integration
+- **`src/modules/logto.ts`** - Logto Vue plugin initialization
+- **`src/modules/router-guard.ts`** - Router guard for protected routes
+- **`src/pages/login.vue`** - Sign-in page with Logto redirect
+- **`src/pages/callback.vue`** - Handles OAuth callback from Logto
 
 #### Protecting Routes
 
-To protect a route, add a `<route>` block with meta configuration:
+To protect a route, add `meta: { requiresAuth: true }`:
 
 ```vue
 <template>
@@ -120,246 +159,68 @@ meta:
 </route>
 ```
 
-See examples in:
+Examples:
+- `src/pages/dashboard.vue` - Protected dashboard
+- `src/pages/nav/4.vue` - Protected navigation page
 
-- `src/pages/dashboard.vue`
-- `src/pages/nav/4.vue`
+#### Using Authentication in Components
 
-### Backend Integration
+```vue
+<script setup lang="ts">
+import { useAuth } from '~/composables'
 
-The frontend is ready to integrate with your backend API. Here's how to connect it:
+const { isAuthenticated, signIn, signOut, getUserInfo } = useAuth()
 
-#### 1. Replace Mock Token Generation
+// Get user information
+const userInfo = await getUserInfo()
+console.log(userInfo) // { sub, username, email, name, picture, ... }
+</script>
+```
 
-In `src/pages/login.vue`, replace the `generateMockToken()` function with a real API call:
+### Advanced Configuration
+
+#### Custom Scopes
+
+Add custom scopes in `src/config/logto.ts`:
 
 ```typescript
-async function handleLogin() {
-  loading.value = true
-  try {
-    // Call your backend API
-    const response = await fetch('https://your-api.com/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: loginForm.value.username,
-        password: loginForm.value.password,
-      }),
-    })
-
-    const data = await response.json()
-
-    if (data.token) {
-      // Store the JWT token from backend
-      const success = login(data.token)
-
-      if (success) {
-        ElMessage.success('Login successful!')
-        const redirect = router.currentRoute.value.query.redirect as string
-        await router.push(redirect || '/')
-      }
-    }
-    else {
-      ElMessage.error('Invalid credentials')
-    }
-  }
-  catch (error) {
-    ElMessage.error('Login failed. Please try again.')
-  }
-  finally {
-    loading.value = false
+export function getLogtoConfig(): LogtoConfig {
+  return {
+    endpoint: import.meta.env.VITE_LOGTO_ENDPOINT || '',
+    appId: import.meta.env.VITE_LOGTO_APP_ID || '',
+    scopes: [
+      'openid',
+      'profile',
+      'email',
+      'offline_access',
+      'custom_scope', // Add your custom scopes
+    ],
   }
 }
 ```
 
-#### 2. Backend Requirements
-
-Your backend should provide an authentication endpoint that:
-
-1. **Accepts credentials** (username, password)
-2. **Validates the credentials**
-3. **Returns a JWT token** on success
-
-Example response format:
-
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": "123",
-    "email": "user@example.com",
-    "role": "user"
-  }
-}
-```
-
-#### 3. JWT Token Structure
-
-Your backend should generate JWT tokens with these recommended claims:
-
-```json
-{
-  "sub": "user_id", // Subject (user identifier)
-  "email": "user@example.com", // User email
-  "role": "user", // User role (for authorization)
-  "iat": 1516239022, // Issued at timestamp
-  "exp": 1516242622 // Expiration timestamp (required)
-}
-```
-
-#### 4. Securing API Requests
-
-To send authenticated requests to your backend:
-
-```typescript
-import { getToken } from '~/composables/auth'
-
-// Example API call with JWT token
-async function fetchProtectedData() {
-  const token = getToken()
-
-  const response = await fetch('https://your-api.com/protected-endpoint', {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  })
-
-  return response.json()
-}
-```
-
-#### 5. Token Refresh (Optional)
-
-For long-lived sessions, implement token refresh:
-
-```typescript
-// In your API interceptor or auth composable
-async function refreshToken() {
-  const currentToken = getToken()
-
-  const response = await fetch('https://your-api.com/auth/refresh', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${currentToken}`,
-    },
-  })
-
-  const data = await response.json()
-  if (data.token) {
-    login(data.token) // Update with new token
-  }
-}
-```
-
-### Security Considerations
-
-1. **Token Storage**: Currently uses localStorage. Consider these alternatives:
-   - httpOnly cookies (more secure, requires backend support)
-   - sessionStorage (for single-tab sessions)
-
-2. **HTTPS Only**: Always use HTTPS in production to prevent token interception
-
-3. **Token Expiration**: Set reasonable expiration times (e.g., 1-24 hours)
-
-4. **Refresh Tokens**: Implement refresh tokens for better UX and security
-
-5. **CSRF Protection**: If using cookies, implement CSRF tokens
-
-6. **Secret Key**: Your backend must use a strong secret key for signing JWTs
-
-### API Integration Example
-
-Here's a complete example of integrating with a real backend:
-
-```typescript
-// src/api/auth.ts
-import { logout as clearToken, login as storeToken } from '~/composables/auth'
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.example.com'
-
-export interface LoginCredentials {
-  username: string
-  password: string
-}
-
-export interface AuthResponse {
-  token: string
-  user: {
-    id: string
-    email: string
-    role: string
-  }
-}
-
-export async function loginUser(credentials: LoginCredentials): Promise<AuthResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(credentials),
-  })
-
-  if (!response.ok) {
-    throw new Error('Login failed')
-  }
-
-  return response.json()
-}
-
-export async function logoutUser(): Promise<void> {
-  // Optional: notify backend of logout
-  const token = getToken()
-  if (token) {
-    await fetch(`${API_BASE_URL}/auth/logout`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-    })
-  }
-
-  clearToken()
-}
-```
-
-### Customization
-
-#### Extend JWT Payload
-
-Update the `JWTPayload` interface in `src/composables/auth.ts`:
-
-```typescript
-interface JWTPayload {
-  sub?: string
-  exp?: number
-  iat?: number
-  email?: string
-  role?: string
-  // Add your custom claims:
-  permissions?: string[]
-  organization?: string
-  [key: string]: any
-}
-```
-
-#### Add Role-Based Access Control
+#### Role-Based Access Control
 
 Extend the router guard in `src/modules/router-guard.ts`:
 
 ```typescript
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const requiresAuth = to.meta.requiresAuth as boolean
   const requiredRole = to.meta.role as string
 
   if (requiresAuth) {
-    const token = getToken()
-    if (!token || !isTokenValid(token)) {
+    const logtoClient = getLogtoClient()
+    const isAuthenticated = await logtoClient.isAuthenticated()
+
+    if (!isAuthenticated) {
       next({ path: '/login', query: { redirect: to.fullPath } })
       return
     }
 
     // Check role if specified
     if (requiredRole) {
-      const decoded = getDecodedToken()
-      if (decoded?.role !== requiredRole) {
+      const userInfo = await logtoClient.fetchUserInfo()
+      if (userInfo.role !== requiredRole) {
         next({ path: '/forbidden' })
         return
       }
@@ -370,7 +231,7 @@ router.beforeEach((to, _from, next) => {
 })
 ```
 
-Then use it in route definitions:
+Then use it in routes:
 
 ```vue
 <route lang="yaml">
@@ -380,25 +241,73 @@ meta:
 </route>
 ```
 
+#### API Requests with Access Token
+
+```typescript
+import { useAuth } from '~/composables'
+
+const { getToken } = useAuth()
+
+async function fetchProtectedData() {
+  const accessToken = getToken()
+
+  const response = await fetch('https://your-api.com/protected', {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  return response.json()
+}
+```
+
+### Production Deployment
+
+#### Environment Variables
+
+Update your production environment variables:
+
+```env
+VITE_LOGTO_ENDPOINT=https://your-production-app.logto.app
+VITE_LOGTO_APP_ID=your-production-app-id
+VITE_LOGTO_REDIRECT_URI=https://yourdomain.com/callback
+VITE_LOGTO_POST_LOGOUT_REDIRECT_URI=https://yourdomain.com
+```
+
+#### Configure Redirect URIs
+
+Add your production domain to Logto's redirect URI settings in the Console.
+
+#### CORS Configuration
+
+If your API is on a different domain, configure CORS in your backend to allow:
+- `Origin`: Your frontend domain
+- `Access-Control-Allow-Credentials`: true
+
 ### Troubleshooting
 
-**Issue**: "Invalid token" error on page refresh
+**Issue**: "Logto configuration is missing"
+- **Solution**: Make sure `.env` file exists with correct values
+- **Solution**: Restart dev server after changing `.env` file
 
-- **Solution**: Ensure token expiration is set properly. Check browser localStorage for the `auth_token` key.
+**Issue**: "Redirect URI mismatch"
+- **Solution**: Add the exact redirect URI to Logto Console (including protocol, domain, and path)
+- **Solution**: Check that `VITE_LOGTO_REDIRECT_URI` matches the configured URI
 
-**Issue**: Redirected to login when token should be valid
+**Issue**: Authentication works locally but not in production
+- **Solution**: Update production environment variables
+- **Solution**: Add production redirect URIs to Logto Console
+- **Solution**: Ensure HTTPS is enabled in production
 
-- **Solution**: Verify token expiration timestamp. Check browser console for validation errors.
+**Issue**: User info is empty or null
+- **Solution**: Request additional scopes in `src/config/logto.ts`
+- **Solution**: Check that scopes are configured in Logto Console
 
-**Issue**: Can't access protected routes
+### Resources
 
-- **Solution**: Make sure you're logged in and the route has `meta: { requiresAuth: true }` in its route block.
-
-### Demo Credentials
-
-In demo mode (without backend):
-
-- **Username**: Any value
-- **Password**: Any value
-
-The system will generate a mock JWT token valid for 24 hours.
+- [Logto Documentation](https://docs.logto.io/)
+- [Logto Vue SDK](https://docs.logto.io/docs/recipes/integrate-logto/vue/)
+- [Logto Console](https://console.logto.io/)
+- [OAuth 2.0 Explained](https://oauth.net/2/)
+- [OpenID Connect](https://openid.net/connect/)

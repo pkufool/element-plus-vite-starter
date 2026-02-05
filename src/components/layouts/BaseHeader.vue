@@ -1,29 +1,48 @@
 <script lang="ts" setup>
 import { ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router'
+import { onMounted, ref } from 'vue'
 import { repository } from '~/../package.json'
 
 import { toggleDark, useAuth } from '~/composables'
+import { getLogtoRedirectUris } from '~/config/logto'
 
-const router = useRouter()
-const { isAuthenticated, logout, getDecodedToken } = useAuth()
+const { isAuthenticated, signOut, getUserInfo } = useAuth()
+
+const username = ref<string>('User')
 
 /**
- * Handle user logout
+ * Load user information
  */
-function handleLogout() {
-  logout()
-  ElMessage.success('Logged out successfully')
-  router.push('/login')
+onMounted(async () => {
+  if (isAuthenticated.value) {
+    const userInfo = await getUserInfo()
+    if (userInfo) {
+      // Try different fields for username
+      username.value = userInfo.username || userInfo.name || userInfo.sub || 'User'
+    }
+  }
+})
+
+/**
+ * Handle user logout with Logto
+ */
+async function handleLogout() {
+  try {
+    const { postLogoutRedirectUri } = getLogtoRedirectUris()
+    await signOut(postLogoutRedirectUri)
+    ElMessage.success('Signed out successfully')
+  }
+  catch (error) {
+    console.error('Sign out error:', error)
+    ElMessage.error('Failed to sign out. Please try again.')
+  }
 }
 
 /**
- * Get username from token
+ * Get username display value
  */
-function getUsername(): string {
-  const token = getDecodedToken()
-  const username = token?.sub || 'User'
-  return username || 'U' // Fallback to 'U' if empty
+function getUsernameDisplay(): string {
+  return username.value || 'U' // Fallback to 'U' if empty
 }
 </script>
 
@@ -73,7 +92,7 @@ function getUsername(): string {
     <!-- Authentication Menu Items -->
     <el-menu-item v-if="!isAuthenticated" index="/login">
       <el-button type="primary" size="small">
-        Login
+        Sign In
       </el-button>
     </el-menu-item>
 
@@ -81,16 +100,16 @@ function getUsername(): string {
       <template #title>
         <el-space :size="8">
           <el-avatar :size="24" style="background-color: var(--ep-color-primary)">
-            {{ getUsername()[0].toUpperCase() }}
+            {{ getUsernameDisplay()[0].toUpperCase() }}
           </el-avatar>
-          <span>{{ getUsername() }}</span>
+          <span>{{ getUsernameDisplay() }}</span>
         </el-space>
       </template>
       <el-menu-item index="/dashboard">
         Dashboard
       </el-menu-item>
       <el-menu-item @click="handleLogout">
-        Logout
+        Sign Out
       </el-menu-item>
     </el-sub-menu>
 

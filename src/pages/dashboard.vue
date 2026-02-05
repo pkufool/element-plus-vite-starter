@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { useAuth } from '~/composables/auth'
 
 /**
@@ -7,8 +8,16 @@ import { useAuth } from '~/composables/auth'
  * See route meta configuration below
  */
 
-const { getDecodedToken } = useAuth()
-const userInfo = getDecodedToken()
+const { getUserInfo, getDecodedIdToken } = useAuth()
+const userInfo = ref<any>(null)
+const tokenInfo = ref<any>(null)
+
+onMounted(async () => {
+  // Load user information from Logto
+  userInfo.value = await getUserInfo()
+  // Get ID token for additional claims
+  tokenInfo.value = getDecodedIdToken()
+})
 </script>
 
 <template>
@@ -18,7 +27,7 @@ const userInfo = getDecodedToken()
         <div class="card-header">
           <h2>Protected Dashboard</h2>
           <el-tag type="success" size="large">
-            Authenticated
+            Authenticated with Logto
           </el-tag>
         </div>
       </template>
@@ -31,27 +40,33 @@ const userInfo = getDecodedToken()
           show-icon
         >
           <p>You have successfully accessed this protected page.</p>
-          <p>This page requires JWT authentication to access.</p>
+          <p>This page requires Logto authentication to access.</p>
         </el-alert>
 
         <el-divider />
 
         <h3>User Information</h3>
         <el-descriptions :column="1" border>
+          <el-descriptions-item label="User ID">
+            {{ userInfo?.sub || tokenInfo?.sub || 'N/A' }}
+          </el-descriptions-item>
           <el-descriptions-item label="Username">
-            {{ userInfo?.sub || 'N/A' }}
+            {{ userInfo?.username || tokenInfo?.username || 'N/A' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="Name">
+            {{ userInfo?.name || tokenInfo?.name || 'N/A' }}
           </el-descriptions-item>
           <el-descriptions-item label="Email">
-            {{ userInfo?.email || 'N/A' }}
+            {{ userInfo?.email || tokenInfo?.email || 'N/A' }}
           </el-descriptions-item>
-          <el-descriptions-item label="Role">
-            {{ userInfo?.role || 'N/A' }}
+          <el-descriptions-item v-if="userInfo?.picture" label="Profile Picture">
+            <el-avatar :src="userInfo.picture" :size="40" />
           </el-descriptions-item>
-          <el-descriptions-item label="Token Issued At">
-            {{ userInfo?.iat ? new Date(userInfo.iat * 1000).toLocaleString() : 'N/A' }}
+          <el-descriptions-item v-if="tokenInfo?.iat" label="Token Issued At">
+            {{ new Date(tokenInfo.iat * 1000).toLocaleString() }}
           </el-descriptions-item>
-          <el-descriptions-item label="Token Expires At">
-            {{ userInfo?.exp ? new Date(userInfo.exp * 1000).toLocaleString() : 'N/A' }}
+          <el-descriptions-item v-if="tokenInfo?.exp" label="Token Expires At">
+            {{ new Date(tokenInfo.exp * 1000).toLocaleString() }}
           </el-descriptions-item>
         </el-descriptions>
 
@@ -69,16 +84,16 @@ const userInfo = getDecodedToken()
 
             <el-card shadow="never">
               <template #header>
-                <strong>JWT Validation</strong>
+                <strong>Logto Authentication</strong>
               </template>
-              <p>The router guard checks for a valid JWT token before allowing access. If the token is missing or expired, users are redirected to the login page.</p>
+              <p>The router guard checks Logto authentication status before allowing access. Unauthenticated users are redirected to the sign-in page.</p>
             </el-card>
 
             <el-card shadow="never">
               <template #header>
-                <strong>Token Storage</strong>
+                <strong>Token Management</strong>
               </template>
-              <p>JWT tokens are stored in localStorage and automatically loaded when the app starts.</p>
+              <p>Logto handles OAuth 2.0 and OIDC authentication flows, providing secure access and ID tokens automatically.</p>
             </el-card>
           </el-space>
         </div>
