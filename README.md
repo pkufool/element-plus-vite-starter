@@ -107,10 +107,12 @@ VITE_LOGTO_POST_LOGOUT_REDIRECT_URI=http://localhost:5173
 In your Logto application settings, add these redirect URIs:
 
 **Sign-in redirect URIs:**
+
 - Development: `http://localhost:5173/callback`
 - Production: `https://yourdomain.com/callback`
 
 **Post sign-out redirect URIs:**
+
 - Development: `http://localhost:5173`
 - Production: `https://yourdomain.com`
 
@@ -160,6 +162,7 @@ meta:
 ```
 
 Examples:
+
 - `src/pages/dashboard.vue` - Protected dashboard
 - `src/pages/nav/4.vue` - Protected navigation page
 
@@ -282,25 +285,30 @@ Add your production domain to Logto's redirect URI settings in the Console.
 #### CORS Configuration
 
 If your API is on a different domain, configure CORS in your backend to allow:
+
 - `Origin`: Your frontend domain
 - `Access-Control-Allow-Credentials`: true
 
 ### Troubleshooting
 
 **Issue**: "Logto configuration is missing"
+
 - **Solution**: Make sure `.env` file exists with correct values
 - **Solution**: Restart dev server after changing `.env` file
 
 **Issue**: "Redirect URI mismatch"
+
 - **Solution**: Add the exact redirect URI to Logto Console (including protocol, domain, and path)
 - **Solution**: Check that `VITE_LOGTO_REDIRECT_URI` matches the configured URI
 
 **Issue**: Authentication works locally but not in production
+
 - **Solution**: Update production environment variables
 - **Solution**: Add production redirect URIs to Logto Console
 - **Solution**: Ensure HTTPS is enabled in production
 
 **Issue**: User info is empty or null
+
 - **Solution**: Request additional scopes in `src/config/logto.ts`
 - **Solution**: Check that scopes are configured in Logto Console
 

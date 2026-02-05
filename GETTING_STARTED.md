@@ -5,10 +5,12 @@ Your Element Plus Vite Starter now has **Logto authentication** fully integrated
 ## ✅ What's Been Done
 
 ### 1. **Logto SDK Installed**
+
 - Added `@logto/vue` (v3.0.11) to dependencies
 - All necessary packages installed and ready
 
 ### 2. **Authentication System Updated**
+
 - ✅ Login page now uses Logto sign-in flow
 - ✅ OAuth callback handler created (`/callback`)
 - ✅ User authentication state managed by Logto
@@ -16,11 +18,13 @@ Your Element Plus Vite Starter now has **Logto authentication** fully integrated
 - ✅ User profile information from Logto displayed in dashboard
 
 ### 3. **Configuration Files Created**
+
 - ✅ `.env.example` - Template with all required variables
 - ✅ `src/config/logto.ts` - Configuration helper functions
 - ✅ `src/modules/logto.ts` - Logto Vue plugin
 
 ### 4. **Documentation Added**
+
 - ✅ Comprehensive README updates
 - ✅ `LOGTO_INTEGRATION.md` - Detailed implementation guide
 - ✅ Inline code comments throughout
@@ -53,6 +57,7 @@ cp .env.example .env
 ```
 
 Edit `.env` file:
+
 ```env
 VITE_LOGTO_ENDPOINT=https://xxxxx.logto.app
 VITE_LOGTO_APP_ID=your_app_id_here
@@ -80,17 +85,17 @@ npm run dev  # Start development server
 
 ## 📁 Key Files to Know
 
-| File | Purpose |
-|------|---------|
-| `.env` | **Your Logto credentials** (create from .env.example) |
-| `src/config/logto.ts` | Logto configuration settings |
-| `src/composables/auth.ts` | Authentication logic and Logto integration |
-| `src/modules/logto.ts` | Logto plugin initialization |
-| `src/pages/login.vue` | Sign-in page (redirects to Logto) |
-| `src/pages/callback.vue` | Handles OAuth callback from Logto |
-| `src/pages/dashboard.vue` | Example protected page |
-| `README.md` | Complete setup and usage documentation |
-| `LOGTO_INTEGRATION.md` | Technical implementation details |
+| File                      | Purpose                                               |
+| ------------------------- | ----------------------------------------------------- |
+| `.env`                    | **Your Logto credentials** (create from .env.example) |
+| `src/config/logto.ts`     | Logto configuration settings                          |
+| `src/composables/auth.ts` | Authentication logic and Logto integration            |
+| `src/modules/logto.ts`    | Logto plugin initialization                           |
+| `src/pages/login.vue`     | Sign-in page (redirects to Logto)                     |
+| `src/pages/callback.vue`  | Handles OAuth callback from Logto                     |
+| `src/pages/dashboard.vue` | Example protected page                                |
+| `README.md`               | Complete setup and usage documentation                |
+| `LOGTO_INTEGRATION.md`    | Technical implementation details                      |
 
 ## 🎨 How It Works
 
@@ -122,6 +127,7 @@ meta:
 ```
 
 Examples already protected:
+
 - `/dashboard` - User dashboard
 - `/nav/4` - Protected navigation page
 
